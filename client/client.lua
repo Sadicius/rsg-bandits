@@ -6,21 +6,21 @@ local npcs = {}
 local horse = {}
 
 Citizen.CreateThread(function()
-    while true do
-        Wait(1000)
-        for v,k in pairs(Config.Bandits) do
-            local coords = GetEntityCoords(PlayerPedId())
-            local dis = GetDistanceBetweenCoords(coords.x, coords.y, coords.z, k.triggerPoint.x, k.triggerPoint.y, k.triggerPoint.z)
-            if dis < Config.TriggerBandits and spawnbandits == false then
+	while true do
+		Wait(1000)
+		for v,k in pairs(Config.Bandits) do
+			local coords = GetEntityCoords(PlayerPedId())
+			local dis = GetDistanceBetweenCoords(coords.x, coords.y, coords.z, k.triggerPoint.x, k.triggerPoint.y, k.triggerPoint.z)
+			if dis < Config.TriggerBandits and spawnbandits == false then
 				--print('trigger bandits')
-                banditsTrigger(k.bandits)
-            end
-            if dis >= Config.CalloffBandits and spawnbandits == true then
+				banditsTrigger(k.bandits)
+			end
+			if dis >= Config.CalloffBandits and spawnbandits == true then
 				--print('call off bandits')
 				calloffbandits = true
-            end
-        end
-    end
+			end
+		end
+	end
 end)
 
 function banditsTrigger(bandits)
@@ -60,7 +60,7 @@ end
 Citizen.CreateThread(function()
 	npcs = {}
 	horse = {}
-    while true do
+	while true do
 		Wait(1000)
 		if IsPedDeadOrDying(PlayerPedId(), true) and spawnbandits == true then
 			QRCore.Functions.Notify('looks like they got you', 'primary')
@@ -94,14 +94,14 @@ end)
 
 -- cooldown timer
 function cooldownTimer()
-    cooldownSecondsRemaining = Config.Cooldown
-    Citizen.CreateThread(function()
-        while cooldownSecondsRemaining > 0 do
-            Wait(1000)
-            cooldownSecondsRemaining = cooldownSecondsRemaining - 1
+	cooldownSecondsRemaining = Config.Cooldown
+	Citizen.CreateThread(function()
+		while cooldownSecondsRemaining > 0 do
+			Wait(1000)
+			cooldownSecondsRemaining = cooldownSecondsRemaining - 1
 			print(cooldownSecondsRemaining)
-        end
-    end)
+		end
+	end)
 end
 
 -- delete bandits on resouce restart
