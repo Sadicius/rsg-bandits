@@ -6,17 +6,17 @@ author 'RexShack#3041'
 description 'rsg-bandits'
 
 client_scripts {
-	'client/client.lua'
+    'client/client.lua'
 }
 
 server_scripts {
-	'server/server.lua'
+    'server/server.lua'
 }
 
 shared_scripts {
-	'config.lua'
+    'config.lua'
 }
 
-dependency 'qr-core'
+dependency 'rsg-core'
 
 lua54 'yes'
