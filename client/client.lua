@@ -63,10 +63,11 @@ Citizen.CreateThread(function()
     while true do
         Wait(1000)
         if IsPedDeadOrDying(PlayerPedId(), true) and spawnbandits == true then
-            RSGCore.Functions.Notify('looks like they got you', 'primary')
+            --RSGCore.Functions.Notify('looks like they got you', 'primary')
+            lib.notify({ title = ('looks like they got you'), duration = 5000, type = 'error' })
             Wait(5000)
             TriggerServerEvent('rsg-bandits:server:robplayer')
-            RSGCore.Functions.Notify('and you have been robbed', 'primary')
+            lib.notify({ title = ('and you have been robbed'), duration = 5000, type = 'error' })
             for v,k in pairs(npcs) do
                 DeleteEntity(k)
             end
@@ -86,7 +87,7 @@ Citizen.CreateThread(function()
             end
             calloffbandits = false
             spawnbandits = false
-            RSGCore.Functions.Notify('looks like you got away', 'primary')
+            lib.notify({ title = ('looks like you got away'), duration = 5000, type = 'error' })
             break
         end
     end
