@@ -63,7 +63,6 @@ Citizen.CreateThread(function()
     while true do
         Wait(1000)
         if IsPedDeadOrDying(PlayerPedId(), true) and spawnbandits == true then
-            --RSGCore.Functions.Notify('looks like they got you', 'primary')
             lib.notify({ title = ('looks like they got you'), duration = 5000, type = 'error' })
             Wait(5000)
             TriggerServerEvent('rsg-bandits:server:robplayer')
