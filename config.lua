@@ -5,7 +5,7 @@ Config.TriggerBandits = 200
 Config.CalloffBandits = 250
 
 Config.Bandits = {
-    {
+   {
         triggerPoint = vector3(141.40013, -472.7084, 69.054039),
         bandits = {
             vector3(150.15512, -416.4669, 82.518363),
@@ -13,9 +13,9 @@ Config.Bandits = {
             vector3(124.45506, -433.9373, 78.484451),
         }
     },
-    {
+	{
         triggerPoint = vector3(-4732.75, -3444.01, 11.41),
-        bandits = {
+        bandits={
             vector3(-4786.2, -3448.84, 18.31),
             vector3(-4788.21, -3433.12, 16.23),
             vector3(-4778.61, -3425.19, 14.95),
@@ -23,7 +23,7 @@ Config.Bandits = {
     },
     {
         triggerPoint = vector3(-3021.2, -2639.19, 78.14),
-        bandits = {
+        bandits={
             vector3(-2963.15, -2685.32, 86.19),
             vector3(-2971.26, -2687.47, 86.44),
             vector3(-2982.3, -2689.29, 86.08),
@@ -31,10 +31,85 @@ Config.Bandits = {
     },
     {
         triggerPoint = vector3(-2657.9, 92.97, 163.06),
-        bandits = {
+        bandits={
             vector3(-2692.55, 126.2, 166.4),
             vector3(-2687.21, 133.83, 166.17),
             vector3(-2678.52, 150.0, 163.42),
+        }
+    },
+    {
+        triggerPoint = vector3(69.79318, 109.2834, 89.52379),  --Horseshoe Overlook
+        bandits={
+            vector3(-39.377, 151.805, 106.054),
+            vector3(-27.106, 145.789, 106.354),
+            vector3(-17.720, 156.775, 106.345),
+        }
+    },
+    {
+        triggerPoint = vector3(843.9913, -1029.49, 51.982),  --Clemens Point
+        bandits={
+            vector3(904.664, -985.496, 57.959),
+            vector3(908.052, -993.392, 57.825),
+            vector3(913.304, -979.300, 57.959),
+        }
+    },
+    {
+        triggerPoint = vector3(1763.23, -1772.336, 50.682),  --Shady Belle
+        bandits={
+            vector3(1755.809, -1902.507, 47.700),
+            vector3(1760.246, -1902.515, 47.953),
+            vector3(1767.809, -1899.801, 48.107),
+        }
+    },
+    {
+        triggerPoint = vector3(2105.414, -682.160, 42.266),  --Lagras
+        bandits={
+            vector3(2099.235, -604.139, 41.568),
+            vector3(2102.087, -605.837, 41.634),
+            vector3(2097.536, -576.553, 41.678),
+        }
+    },
+    {
+        triggerPoint = vector3(2401.964, 1237.943, 102.537),  --Beaver Hollow
+        bandits={
+            vector3(2455.560, 1210.242, 126.260),
+            vector3(2456.424, 1188.289, 115.950),
+            vector3(2452.765, 1179.280, 113.628),
+        }
+    },
+    {
+        triggerPoint = vector3(-1641.797, -1399.678, 82.847),  --Beecher's Hope
+        bandits={
+            vector3(-1547.873, -1446.262, 94.078),
+            vector3(-1552.659, -1460.727, 93.643),
+            vector3(-1543.956, -1422.445, 90.737),
+        }
+    },
+    {
+        triggerPoint = vector3(3136.868, -767.7388, 44.817),  --Sisika Island
+        bandits={
+            vector3(3233.530, -760.508, 43.486),
+            vector3(3241.684, -761.313, 43.222),
+            vector3(3229.089, -764.741, 43.330),
+        }
+    },
+    {
+        triggerPoint = vector3(1997.57, -4499.807, 41.774),  --Guarma
+        bandits={
+            vector3(1966.856, -4550.257, 50.631),
+            vector3(1956.615, -4549.892, 50.585),
+            vector3(1956.736, -4555.939, 50.815),
+        }
+    },
+    {
+        triggerPoint = vector3(2372.18, 1667.61, 96.69),  --roanake
+        bandits={
+            vector3(2389.24, 1687.97, 95.7),
+            vector3(2401.8, 1694.37, 95.56),
+            vector3(2380.7, 1696.24, 96.12),
+            vector3(2371.91, 1695.64, 97.66),
+            vector3(2366.97, 1721.46, 100.29),
+            vector3(2394.2, 1688.39, 97.99),
         }
     }
 }
