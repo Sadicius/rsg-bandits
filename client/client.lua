@@ -1,9 +1,13 @@
 local RSGCore = exports['rsg-core']:GetCoreObject()
+
+----------------------------------------------------------------------------
+-- Variables
+----------------------------------------------------------------------------
+local npcs = {}
+local horse = {}
 local spawnbandits = false
 local calloffbandits = false
 local cooldownSecondsRemaining = 0
-local npcs = {}
-local horse = {}
 local isLoggedIn = false
 
 ----------------------------------------------------------------------------
@@ -14,17 +18,80 @@ RegisterNetEvent('RSGCore:Client:OnPlayerLoaded', function()
 end)
 
 ----------------------------------------------------------------------------
+-- Promp Hands Up
+----------------------------------------------------------------------------
+local function HandsUp()
+    CreateThread(
+        function()
+            local str = 'HandsUp'
+            local wait = 0
+            local HandsUpPrompt = Citizen.InvokeNative(0x04F97DE45A519419)
+            PromptSetControlAction(HandsUpPrompt, RSGCore.Shared.Keybinds['X'])
+            str = CreateVarString(10, 'LITERAL_STRING', str)
+            PromptSetText(HandsUpPrompt, str)
+            PromptSetEnabled(HandsUpPrompt, true)
+            PromptSetVisible(HandsUpPrompt, true)
+            PromptSetHoldMode(HandsUpPrompt, true)
+            PromptRegisterEnd(HandsUpPrompt)
+        end
+    )
+end
+
+----------------------------------------------------------------------------
 -- cooldown timer
 ----------------------------------------------------------------------------
 local function cooldownTimer()
     cooldownSecondsRemaining = Config.Cooldown
-    Citizen.CreateThread(function()
+    CreateThread(function()
         while cooldownSecondsRemaining > 0 do
             Wait(1000)
             cooldownSecondsRemaining = cooldownSecondsRemaining - 1
-            print(cooldownSecondsRemaining)
+            if Config.Debug then
+                print(cooldownSecondsRemaining)
+            end
         end
     end)
+end
+
+-------------------------
+-- FUNCTION STOP BANDITS
+-------------------------
+local function stopBandits()
+	-- Wait(30000) -- 30 s for looting
+    for k, v in pairs(npcs) do
+        DeleteEntity(v)
+        Wait(500)
+    end
+    for k, v in pairs(horse) do
+        DeleteEntity(v)
+        Wait(500)
+    end
+    calloffbandits = false
+    spawnbandits = false
+    ClearPedTasks(PlayerPedId())
+    cooldownTimer()
+end
+
+----------------------------------------------------------------------------
+-- Function to check if the player raises their hands
+----------------------------------------------------------------------------
+local function checkHandsUp(playerPed, banditPed)
+    if not HandsUp() then
+        TaskCombatPed(banditPed, playerPed)
+        if Config.Debug then
+            print('Combat Npcs Bantids')
+        end
+        lib.notify({ title = ('Hands up, vermin or you dead!'), duration = 5000, type = 'inform' })
+    else
+        Wait(100)
+        if Config.Debug then
+            print('Hands up')
+            print('Pause Combat Npcs Bantids, dont dead player but bandits robbery')
+        end
+        local pauseDuration = 10000
+        TaskPause(banditPed, pauseDuration)
+        TriggerServerEvent('rsg-bandits:server:robplayer')
+    end
 end
 
 ----------------------------------------------------------------------------
@@ -32,36 +99,45 @@ end
 ----------------------------------------------------------------------------
 local function banditsTrigger(bandits)
     spawnbandits = true
-    for v,k in pairs(bandits) do
-        local horsemodel = GetHashKey(Config.HorseModels[math.random(1,#Config.HorseModels)])
-        local banditmodel = GetHashKey(Config.BanditsModel[math.random(1,#Config.BanditsModel)])
-        local banditWeapon = Config.Weapons[math.random(1,#Config.Weapons)]
+    for k, v in pairs(bandits) do
+        local horsemodel = GetHashKey(Config.HorseModels[math.random(1, #Config.HorseModels)])
+        local banditmodel = GetHashKey(Config.BanditsModel[math.random(1, #Config.BanditsModel)])
+        local banditWeapon = Config.Weapons[math.random(1, #Config.Weapons)]
+
         RequestModel(banditmodel)
         if not HasModelLoaded(banditmodel) then RequestModel(banditmodel) end
         while not HasModelLoaded(banditmodel) do Wait(1) end
+
         Wait(100)
         -- create bandits
-        npcs[v] = CreatePed(banditmodel, k, true, true, true, true)
-        Citizen.InvokeNative(0x283978A15512B2FE, npcs[v], true)
-        Citizen.InvokeNative(0x23f74c2fda6e7c61, 953018525, npcs[v])
+        npcs[k] = CreatePed(banditmodel, v, true, true, true, true)
+        Citizen.InvokeNative(0x283978A15512B2FE, npcs[k], true)
+        Citizen.InvokeNative(0x23f74c2fda6e7c61, 953018525, npcs[k])
+
         -- give weapon to bandits
-        GiveWeaponToPed(npcs[v], banditWeapon, 50, true, true, 1, false, 0.5, 1.0, 1.0, true, 0, 0)
-        SetCurrentPedWeapon(npcs[v], banditWeapon, true)
+        GiveWeaponToPed(npcs[k], banditWeapon, 50, true, true, 1, false, 0.5, 1.0, 1.0, true, 0, 0)
+        SetCurrentPedWeapon(npcs[k], banditWeapon, true)
+
         -- create horse sit bandits on horse
         RequestModel(horsemodel)
         if not HasModelLoaded(horsemodel) then RequestModel(horsemodel) end
         while not HasModelLoaded(horsemodel) do Wait(1) end
         Wait(100)
-        horse[v] = CreatePed(horsemodel, k, true, true, true, true)
-        Citizen.InvokeNative(0x283978A15512B2FE, horse[v], true)
-        Citizen.InvokeNative(0xD3A7B003ED343FD9, horse[v],0x20359E53,true,true,true) --saddle
-        Citizen.InvokeNative(0xD3A7B003ED343FD9, horse[v],0x508B80B9,true,true,true) --blanket
-        Citizen.InvokeNative(0xD3A7B003ED343FD9, horse[v],0xF0C30271,true,true,true) --bag
-        Citizen.InvokeNative(0xD3A7B003ED343FD9, horse[v],0x12F0DF9F,true,true,true) --bedroll
-        Citizen.InvokeNative(0xD3A7B003ED343FD9, horse[v],0x67AF7302,true,true,true) --stirups
-        Citizen.InvokeNative(0x028F76B6E78246EB, npcs[v], horse[v], -1)
-        TaskCombatPed(npcs[v], PlayerPedId())
+        -- create horse
+        horse[k] = CreatePed(horsemodel, v, true, true, true, true)
+        Citizen.InvokeNative(0x283978A15512B2FE, horse[k], true)
+        Citizen.InvokeNative(0xD3A7B003ED343FD9, horse[k],0x20359E53,true,true,true) --saddle
+        Citizen.InvokeNative(0xD3A7B003ED343FD9, horse[k],0x508B80B9,true,true,true) --blanket
+        Citizen.InvokeNative(0xD3A7B003ED343FD9, horse[k],0xF0C30271,true,true,true) --bag
+        Citizen.InvokeNative(0xD3A7B003ED343FD9, horse[k],0x12F0DF9F,true,true,true) --bedroll
+        Citizen.InvokeNative(0xD3A7B003ED343FD9, horse[k],0x67AF7302,true,true,true) --stirups
+        Citizen.InvokeNative(0x028F76B6E78246EB, npcs[k], horse[k], -1)
+
+        TaskCombatPed(npcs[k], PlayerPedId())
+
+        checkHandsUp(PlayerPedId(), npcs[k])
     end
+    lib.notify({ title = ('You were ambushed!'), duration = 5000, type = 'inform' })
 end
 
 ----------------------------------------------------------------------------
@@ -70,22 +146,26 @@ end
 CreateThread(function()
     while true do
         Wait(1000)
-        for v,k in pairs(Config.Bandits) do
+        for k, v in pairs(Config.Bandits) do
             local coords = GetEntityCoords(PlayerPedId())
-            local coords3 = vector3(k.triggerPoint.x, k.triggerPoint.y, k.triggerPoint.z)
+            local coords3 = vector3(v.triggerPoint.x, v.triggerPoint.y, v.triggerPoint.z)
             local dis = #(coords - coords3)
             if dis < Config.TriggerBandits and not spawnbandits then
-                --print('trigger bandits')
-                banditsTrigger(k.bandits)
+                if Config.Debug then
+                    print('Trigger bandits')
+                end
+                banditsTrigger(v.bandits)
             end
             if dis >= Config.CalloffBandits and spawnbandits then
-                --print('call off bandits')
                 calloffbandits = true
             end
         end
     end
 end)
 
+----------------------------------------------------------------------------
+-- Check for Player Death and Calloff Bandits
+----------------------------------------------------------------------------
 CreateThread(function()
     npcs = {}
     horse = {}
@@ -94,27 +174,14 @@ CreateThread(function()
         if IsPedDeadOrDying(PlayerPedId(), true) and spawnbandits then
             lib.notify({ title = ('looks like they got you'), duration = 5000, type = 'error' })
             Wait(5000)
+
             TriggerServerEvent('rsg-bandits:server:robplayer')
             lib.notify({ title = ('and you have been robbed'), duration = 5000, type = 'error' })
-            for v,k in pairs(npcs) do
-                DeleteEntity(k)
-            end
-            for v,k in pairs(horse) do
-                DeleteEntity(k)
-            end
-            calloffbandits = false
-            spawnbandits = false
+            stopBandits()
             break
         end
         if calloffbandits then
-            for v,k in pairs(npcs) do
-                DeleteEntity(k)
-            end
-            for v,k in pairs(horse) do
-                DeleteEntity(k)
-            end
-            calloffbandits = false
-            spawnbandits = false
+            stopBandits()
             lib.notify({ title = ('looks like you got away'), duration = 5000, type = 'error' })
             break
         end
@@ -125,10 +192,10 @@ end)
 -- delete bandits on resouce restart
 ----------------------------------------------------------------------------
 AddEventHandler("onResourceStop",function(resourceName)
-    for v,k in pairs(npcs) do
-        DeleteEntity(k)
+    for k, v in pairs(npcs) do
+        DeleteEntity(v)
     end
-    for v,k in pairs(horse) do
-        DeleteEntity(k)
+    for k, v in pairs(horse) do
+        DeleteEntity(v)
     end
 end)
