@@ -6,6 +6,7 @@ local RSGCore = exports['rsg-core']:GetCoreObject()
 local npcs = {}
 local horse = {}
 local spawnbandits = false
+local attackbandits = false
 local calloffbandits = false
 local cooldownSecondsRemaining = 0
 local isLoggedIn = false
@@ -16,26 +17,6 @@ local isLoggedIn = false
 RegisterNetEvent('RSGCore:Client:OnPlayerLoaded', function()
     isLoggedIn = true
 end)
-
-----------------------------------------------------------------------------
--- Promp Hands Up
-----------------------------------------------------------------------------
-local function HandsUp()
-    CreateThread(
-        function()
-            local str = 'HandsUp'
-            local wait = 0
-            local HandsUpPrompt = Citizen.InvokeNative(0x04F97DE45A519419)
-            PromptSetControlAction(HandsUpPrompt, RSGCore.Shared.Keybinds['X'])
-            str = CreateVarString(10, 'LITERAL_STRING', str)
-            PromptSetText(HandsUpPrompt, str)
-            PromptSetEnabled(HandsUpPrompt, true)
-            PromptSetVisible(HandsUpPrompt, true)
-            PromptSetHoldMode(HandsUpPrompt, true)
-            PromptRegisterEnd(HandsUpPrompt)
-        end
-    )
-end
 
 ----------------------------------------------------------------------------
 -- cooldown timer
@@ -50,6 +31,25 @@ local function cooldownTimer()
                 print(cooldownSecondsRemaining)
             end
         end
+    end)
+end
+
+----------------------------------------------------------------------------
+-- Promp Hands Up
+----------------------------------------------------------------------------
+local function HandsUp()
+CreateThread(
+    function()
+        local str = 'HandsUp'
+        local wait = 0
+        local HandsUpPrompt = Citizen.InvokeNative(0x04F97DE45A519419)
+        PromptSetControlAction(HandsUpPrompt, RSGCore.Shared.Keybinds['X'])
+        str = CreateVarString(10, 'LITERAL_STRING', str)
+        PromptSetText(HandsUpPrompt, str)
+        PromptSetEnabled(HandsUpPrompt, true)
+        PromptSetVisible(HandsUpPrompt, true)
+        PromptSetHoldMode(HandsUpPrompt, true)
+        PromptRegisterEnd(HandsUpPrompt)
     end)
 end
 
@@ -70,19 +70,54 @@ local function stopBandits()
     spawnbandits = false
     ClearPedTasks(PlayerPedId())
     cooldownTimer()
+    PromptDelete(HandsUpPrompt)
+end
+
+----------------------------------------------------------------------------
+-- approach player And Rob
+----------------------------------------------------------------------------
+
+local function approachAndRob(playerPed, banditPed)
+    local banditCoords = GetEntityCoords(banditPed)
+    local playerCoords = GetEntityCoords(playerPed)
+
+    -- Determine the direction from the bandit to the player
+    local heading = GetEntityHeading(banditPed)
+    local x, y, z = 0.0, 0.0, 0.0
+    x = math.sin(math.rad(heading))
+    y = math.cos(math.rad(heading))
+
+    -- Calculate the position where the bandit should move towards the player
+    local destination = vector3(playerCoords.x + x, playerCoords.y + y, playerCoords.z)
+
+    -- Move the bandit towards the player
+    TaskGoToCoordAnyMeans(banditPed, destination.x, destination.y, destination.z, 5.0, 0, 0, 786603, 0xbf800000)
+
+    TriggerServerEvent('rsg-bandits:server:robplayer')
 end
 
 ----------------------------------------------------------------------------
 -- Function to check if the player raises their hands
 ----------------------------------------------------------------------------
 local function checkHandsUp(playerPed, banditPed)
-    if not HandsUp() then
-        TaskCombatPed(banditPed, playerPed)
-        if Config.Debug then
-            print('Combat Npcs Bantids')
+    local handsUpPromptActive = false
+
+    -- Function to handle hands up prompt
+    local function handsUpPromptHandler()
+        handsUpPromptActive = true
+        HandsUp()
+        while handsUpPromptActive do
+            Wait(0)
+            if IsControlJustReleased(0, RSGCore.Shared.Keybinds['X']) then
+                handsUpPromptActive = false
+            end
         end
-        lib.notify({ title = ('Hands up, vermin or you dead!'), duration = 5000, type = 'inform' })
-    else
+    end
+
+    -- Start hands up prompt
+    CreateThread(handsUpPromptHandler)
+
+    if not attackbandits then
         Wait(100)
         if Config.Debug then
             print('Hands up')
@@ -90,7 +125,29 @@ local function checkHandsUp(playerPed, banditPed)
         end
         local pauseDuration = 10000
         TaskPause(banditPed, pauseDuration)
-        TriggerServerEvent('rsg-bandits:server:robplayer')
+
+        -- Check if the player pressed the hands up key
+        if handsUpPromptActive then
+            -- Player pressed hands up key, stop combat and approach the player
+            TaskStandStill(banditPed, -1)
+
+            -- Your code to approach the player and rob without killing
+            approachAndRob(playerPed, banditPed)
+
+        else
+            -- Player didn't press hands up key, continue combat
+            TaskCombatPed(banditPed, playerPed)
+            if Config.Debug then
+                print('Combat Npcs Bantids')
+            end
+            lib.notify({ title = ('Hands up, vermin or you dead!'), duration = 5000, type = 'inform' })
+        end
+    else
+        TaskCombatPed(banditPed, playerPed)
+        if Config.Debug then
+            print('Combat Npcs Bantids')
+        end
+        lib.notify({ title = ('Hands up, vermin or you dead!'), duration = 5000, type = 'inform' })
     end
 end
 
@@ -135,7 +192,10 @@ local function banditsTrigger(bandits)
 
         TaskCombatPed(npcs[k], PlayerPedId())
 
+        Wait(1000)
+        
         checkHandsUp(PlayerPedId(), npcs[k])
+
     end
     lib.notify({ title = ('You were ambushed!'), duration = 5000, type = 'inform' })
 end
@@ -198,4 +258,7 @@ AddEventHandler("onResourceStop",function(resourceName)
     for k, v in pairs(horse) do
         DeleteEntity(v)
     end
+
+    PromptDelete(HandsUpPrompt)
+
 end)
